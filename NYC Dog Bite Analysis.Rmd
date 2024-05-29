@@ -1,0 +1,148 @@
+---
+title: "New York City Dog Bite Analysis"
+author: "Ian Young"
+output: 
+  pdf_document:
+    toc: yes
+    fig_caption: yes
+---
+
+\newpage
+
+# Load Packages
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse); library(showtext); library(scales)
+font_add_google("Roboto Condensed")
+showtext_auto()
+library(httr2)
+library(gt)
+```
+
+# Connect to API & Compile Dataset
+
+The httr2 and purrr packages are used to connect to an API from New York City and 
+convert dog bite data for the years 2015 to 2022 from an unstructured format into 
+a data frame.
+```{r}
+# Collect data on dog bites in NYC
+dog_bites <- 
+  request("https://data.cityofnewyork.us/resource/rsgh-akpg.json") |> 
+  req_url_path_append("?$limit=30000") |> # change call limit to collect all records
+  req_perform() |> 
+  resp_body_json() |> 
+  map_dfr(~ as_tibble(.)) # convert lists into one tibble
+```
+
+## Initial Data Cleaning
+
+An initial organizing and cleaning of the data takes place using . This involves converting 
+the date column that is stored as character data type to a date type, and adding a 
+individual column for year, month, and day. This is done using the lubridate package. 
+The uniqueid column was not recorded properly in the initial data set, and a more helpful 
+uniqueid column is created. Lastly, the species column is dropped as it provides no 
+information (all values in it are "DOG") and the columns are rearranged.
+```{r}
+# Correct unique ID, adjust/create date columns, select relevant variables
+dog_bites_clean <- 
+  dog_bites |> 
+  arrange(dateofbite) |> 
+  mutate(uniqueid = row_number(),
+         dateofbite = as_date(dateofbite),
+         biteyear = year(dateofbite),
+         bitemonth = month(dateofbite),
+         biteday = day(dateofbite)) |> 
+  select(uniqueid, dateofbite, biteyear, 
+         bitemonth, biteday, zipcode, 
+         borough, breed, gender,
+         age, spayneuter)
+```
+
+\newpage
+
+# Background & Initial Exploration
+Below is a sample of 10 observations from the initial cleaned dog bite data. 
+There are a total of 26,127 observations and 11 variables (3 data columns not displayed 
+in the table below). Each observation represents a single unique dog bite incident 
+collected by NYC between the start of 2015 and the end of 2022. The data was collected 
+online, by mail/fax, and by phone by the health departments animal bite unit. As 
+a result columns like zipcode, breed, and age all contain a range of values including 
+missing data. For the spayneuter column FALSE represents dogs that have not had their 
+reproductive organs surgically removed, as well as cases where it is unknown if the 
+dog involved in the incident has or has not been neutered. Note: The skimr package 
+and function skim are not rendered below, they were used in gathering a quick general 
+understanding of the data.
+```{r}
+# Sample of 10 observations
+set.seed(30)
+dog_bites_clean |> 
+  select(-biteyear, -bitemonth, -biteday) |> 
+  sample_n(10) |> 
+  gt() |> 
+  tab_header(
+    title = md("**NYC Dog Bite Reports 2015-2022**"),
+    subtitle = md("Sample of 10 Observations")
+  ) |> 
+  tab_source_note(
+    source_note = md("Source: 
+    https://data.cityofnewyork.us/Health/DOHMH-Dog-Bite-Data/rsgh-akpg/about_data")
+  ) |> 
+  tab_footnote(
+    footnote = md("**FALSE** represents dogs that have not been neutered **OR** 
+                  it was unknown."),
+    locations = cells_column_labels(
+      columns = spayneuter
+    )
+  )
+
+# Method for quick glimpse of the data
+# skimr::skim(dog_bites_clean)
+```
+
+## Further Data Cleaning
+
+# Analysis
+
+## Mapping
+
+## Group comparisons
+
+## Forecasting
+
+## Predicting
+
+# Reference
+```{r}
+# clean up age column, zip code column, pull in long/latitude?
+
+# format gt table
+# group data by month and pull potential predictors of dog bites per month
+
+# ts <- 
+#   test |> 
+#   group_by(biteyear, bitemonth) |> 
+#   count() |> 
+#   mutate(date = make_date(biteyear, bitemonth)) |> 
+#   ungroup() |> 
+#   select(date, n)
+# 
+# ts |> 
+# ggplot(aes(x = date, y = n)) +
+#   geom_line() + 
+#   scale_x_date(date_labels = "%Y", date_breaks = "1 year") +
+#   labs(x = "Date", y = "Dog Bites", title = "NYC Dog Bites Over Time") +
+#   theme_minimal()
+
+# nyc_weather <-
+#   request("https://api.weather.gov") |> 
+#   req_url_path_append("points", 
+#                       "40.74,-73.98"
+#                       ) |> 
+#   req_perform() |> 
+#   resp_body_json() |> 
+#   pluck("properties", "forecast") |> 
+#   glimpse()
+#   map_dfr(~ as_tibble(.))
+```
+  
+  
+
