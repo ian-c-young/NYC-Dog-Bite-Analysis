@@ -93,55 +93,72 @@ dog_bites_clean |>
       columns = spayneuter
     )
   )
-
-# Method for quick glimpse of the data
-# skimr::skim(dog_bites_clean)
 ```
 
-## Further Data Cleaning
+\newpage
 
 # Analysis
 
-## Mapping
-
-## Group comparisons
-
 ## Forecasting
+```{r}
+# Create data frame for time series analysis
+dog_ts <-
+  dog_bites_clean |>
+  group_by(biteyear, bitemonth) |>
+  count() |>
+  mutate(
+    season = case_when(
+    bitemonth %in% c(3, 4, 5) ~ "spring",
+    bitemonth %in% c(6, 7, 8) ~ "summer",
+    bitemonth %in% c(9, 10, 11) ~ "fall",
+    bitemonth %in% c(12, 1, 2) ~ "winter"), 
+    date = make_date(biteyear, bitemonth)
+    ) |>
+  ungroup() |>
+  select(date, season, n)
+  
+
+dog_ts |>
+mutate(season = fct_relevel(season, "spring", "summer", "fall", "winter")) |> 
+ggplot(aes(x = date, y = n)) +
+  geom_line() +
+  geom_point(aes(color = season), size = 3, alpha = 0.7, shape = 20) +
+  scale_x_date(date_labels = "%Y", date_breaks = "1 year") +
+  labs(x = "Date", 
+       y = "Dog Bites", 
+       title = "NYC Dog Bites 2015-2022",
+       subtitle = "Dog bites regularly spike in the summer months with 2020 outlier.",
+       caption = "Source: NYCOpenData") +
+  scale_color_manual(values = c("spring" = "darkgreen", 
+                                "summer" = "firebrick1", 
+                                "fall" = "goldenrod4", 
+                                "winter" = "dodgerblue4")) +
+  theme_bw() +
+  theme(
+    axis.text = element_text(size = 10),
+    axis.title = element_text(size = 10),
+    plot.title = element_text(size = 14),
+    plot.subtitle = element_text(size = 10),
+    plot.caption = element_text(size = 8),
+    legend.position = "bottom",
+    legend.direction = "horizontal",
+    legend.title = element_blank(),
+    legend.text = element_text(size = 10)
+    )
+```
+
+## Exploratory
+
+## Mapping
 
 ## Predicting
 
 # Reference
+
+## Further Data Cleaning
 ```{r}
 # clean up age column, zip code column, pull in long/latitude?
-
-# format gt table
 # group data by month and pull potential predictors of dog bites per month
-
-# ts <- 
-#   test |> 
-#   group_by(biteyear, bitemonth) |> 
-#   count() |> 
-#   mutate(date = make_date(biteyear, bitemonth)) |> 
-#   ungroup() |> 
-#   select(date, n)
-# 
-# ts |> 
-# ggplot(aes(x = date, y = n)) +
-#   geom_line() + 
-#   scale_x_date(date_labels = "%Y", date_breaks = "1 year") +
-#   labs(x = "Date", y = "Dog Bites", title = "NYC Dog Bites Over Time") +
-#   theme_minimal()
-
-# nyc_weather <-
-#   request("https://api.weather.gov") |> 
-#   req_url_path_append("points", 
-#                       "40.74,-73.98"
-#                       ) |> 
-#   req_perform() |> 
-#   resp_body_json() |> 
-#   pluck("properties", "forecast") |> 
-#   glimpse()
-#   map_dfr(~ as_tibble(.))
 ```
   
   
