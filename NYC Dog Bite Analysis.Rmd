@@ -76,6 +76,7 @@ understanding of the data.
 set.seed(30)
 dog_bites_clean |> 
   select(-biteyear, -bitemonth, -biteday) |> 
+  mutate(dateofbite = format(dateofbite, "%Y-%m-%d")) |> 
   sample_n(10) |> 
   gt() |> 
   tab_header(
@@ -95,11 +96,34 @@ dog_bites_clean |>
   )
 ```
 
-\newpage
+## Further Cleaning 
+```{r}
+# Clean up age column, join in longitude/latitude for each zip code
+# breed make everything lower case and remove extra spaces
+```
 
 # Analysis
 
-## Forecasting
+## Exploratory Data Analysis
+```{r}
+# Descriptive Statistics/Plots
+```
+
+## Mapping Dog Bites In NYC
+```{r, warning=FALSE, message=FALSE}
+# Load mapping package
+library(sf)
+
+# Read in shape file
+shape_nyc <- st_read("Borough Boundaries.geojson", quiet = TRUE)
+
+# Begin creation of map
+ggplot() +
+  geom_sf(data = shape_nyc, aes(fill = boro_name), show.legend = FALSE) +
+  theme_void()
+```
+
+## Forecasting Dog Bites In NYC
 ```{r}
 # Create data frame for time series analysis
 dog_ts <-
@@ -117,7 +141,7 @@ dog_ts <-
   ungroup() |>
   select(date, season, n)
   
-
+# Initial plot of time series data
 dog_ts |>
 mutate(season = fct_relevel(season, "spring", "summer", "fall", "winter")) |> 
 ggplot(aes(x = date, y = n)) +
@@ -146,20 +170,3 @@ ggplot(aes(x = date, y = n)) +
     legend.text = element_text(size = 10)
     )
 ```
-
-## Exploratory
-
-## Mapping
-
-## Predicting
-
-# Reference
-
-## Further Data Cleaning
-```{r}
-# clean up age column, zip code column, pull in long/latitude?
-# group data by month and pull potential predictors of dog bites per month
-```
-  
-  
-
