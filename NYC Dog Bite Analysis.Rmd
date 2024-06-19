@@ -184,7 +184,7 @@ ggplot() +
 ```{r}
 # Create data frame for time series analysis
 dog_ts <-
-  dog_bites_clean |>
+  dog_bites_full |>
   group_by(biteyear, bitemonth) |>
   count() |>
   mutate(
@@ -204,11 +204,12 @@ mutate(season = fct_relevel(season, "spring", "summer", "fall", "winter")) |>
 ggplot(aes(x = date, y = n)) +
   geom_line() +
   geom_point(aes(color = season), size = 3, alpha = 0.7, shape = 20) +
+  ylim(0, NA) +
   scale_x_date(date_labels = "%Y", date_breaks = "1 year") +
   labs(x = "Date", 
        y = "Dog Bites", 
        title = "NYC Dog Bites 2015-2022",
-       subtitle = "Dog bites regularly spike in the summer months with 2020 outlier.",
+       subtitle = "Dog bites regularly spike in the summer months.",
        caption = "Source: NYCOpenData") +
   scale_color_manual(values = c("spring" = "darkgreen", 
                                 "summer" = "firebrick1", 
