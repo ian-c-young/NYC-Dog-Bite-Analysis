@@ -35,7 +35,7 @@ dog_bites <-
 
 ## Initial Data Cleaning
 
-An initial organizing and cleaning of the data takes place using . This involves converting 
+An initial organizing and cleaning of the data takes place. This involves converting 
 the date column that is stored as character data type to a date type, and adding a 
 individual column for year, month, and day. This is done using the lubridate package. 
 The uniqueid column was not recorded properly in the initial data set, and a more helpful 
@@ -97,9 +97,66 @@ dog_bites_clean |>
 ```
 
 ## Further Cleaning 
-```{r}
-# Clean up age column, join in longitude/latitude for each zip code
-# breed make everything lower case and remove extra spaces
+
+After the inital data cleaning a few more steps occur to prepare the data for analysis. 
+Using the zipcodeR package data on census and geographical data are joined with 
+the dog bite data. This data reflects 2010 census and zip code data. 
+
+The data contains values input from outside of New York City and has missing location 
+data values. For simplicity sake records outside of New York City and the records 
+missing location data are filtered out.
+
+The breed column contains open text responses with a wide variety of inputs. Some 
+simple steps are taken to format including making text lower case, removing white 
+spaces, and removing trailing non letter characters.
+
+Lastly, the age column contains a variety of open text responses reporting age of 
+the dog involved in the incident. These inputs are taken and transformed to represent 
+how old in months the dog was at the time of the incident.
+
+```{r, warning=FALSE, message=FALSE}
+# Load in U.S. ZIP code data from zipcodeR to join with dog bite data
+library(zipcodeR)
+
+zip_db <- 
+  zip_code_db |> 
+  select(zipcode, lat, lng, major_city, state, 
+         county, radius_in_miles, population, population_density, 
+         land_area_in_sqmi, water_area_in_sqmi, housing_units, 
+         occupied_housing_units, median_home_value, median_household_income)
+
+# Join dog bite and zip code data
+dog_bites_full <- 
+  dog_bites_clean |> 
+  left_join(zip_db, by = "zipcode")
+
+# Rearrange columns
+dog_bites_full <- 
+  dog_bites_full |> 
+  relocate(zipcode, .after = spayneuter) |> 
+  relocate(borough, .after = lng) |> 
+  relocate(land_area_in_sqmi, water_area_in_sqmi, .after = radius_in_miles)
+
+# Filter missing location data and down to NYC records
+nyc_counties <- c("Bronx County", "Kings County", "New York County", 
+                  "Queens County", "Richmond County")
+
+dog_bites_full <- 
+  dog_bites_full |> 
+  drop_na(lat) |> 
+  filter(state == "NY") |> 
+  filter(county %in% nyc_counties)
+
+# Clean up breed column text
+dog_bites_full <- dog_bites_full %>%
+  mutate(breed = str_to_lower(breed), # change text to lower case
+         breed = str_trim(breed), # remove start and end white space
+         breed = str_squish(breed), # internal white space replaced with single space
+         breed = str_remove(breed, "[^a-z]+$") # remove non letter trailing characters
+         )
+
+# Clean up age column
+
 ```
 
 # Analysis
