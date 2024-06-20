@@ -98,7 +98,7 @@ dog_bites_clean |>
 
 ## Further Cleaning 
 
-After the inital data cleaning a few more steps occur to prepare the data for analysis. 
+After the initial data cleaning a few more steps occur to prepare the data for analysis. 
 Using the zipcodeR package data on census and geographical data are joined with 
 the dog bite data. This data reflects 2010 census and zip code data. 
 
@@ -111,8 +111,16 @@ simple steps are taken to format including making text lower case, removing whit
 spaces, and removing trailing non letter characters.
 
 Lastly, the age column contains a variety of open text responses reporting age of 
-the dog involved in the incident. These inputs are taken and transformed to represent 
-how old in months the dog was at the time of the incident.
+the dog involved in the incident. The data in this column is very messy and no 
+clear and consistent parameters were used in the generation of this data. To clean 
+this data up values that were simply numbers were treated as years, while other values 
+had something indicating months or weeks old. Other columns listed multiple weeks, 
+months, or years in these instances the largest value was taken. A couple values 
+had nonsensical values such as 65 years old and those were assumed to be typos and 
+changed to months. It is also possible some respondents when considering the age of 
+the dog thought in dog years. For all these reasons even the cleaned column should 
+be used with caution. In the future the form used to generate the data should outline 
+clear parameters for responding to the question or force specific answers.
 
 ```{r, warning=FALSE, message=FALSE}
 # Load in U.S. ZIP code data from zipcodeR to join with dog bite data
@@ -156,7 +164,15 @@ dog_bites_full <- dog_bites_full %>%
          )
 
 # Clean up age column
+clean_age <- readxl::read_excel(
+  "cleaned_age.xlsx",
+  col_types = c("text", "numeric", "numeric")
+  )
 
+dog_bites_full <- 
+  dog_bites_full |> 
+  left_join(clean_age, by = "age") |> 
+  relocate(age_months, age_year, .after = age)
 ```
 
 # Analysis
