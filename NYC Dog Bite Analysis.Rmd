@@ -187,14 +187,52 @@ dog_bites_full <-
 # Load mapping package
 library(sf)
 
-# Read in shape file
-shape_nyc <- st_read("Borough Boundaries.geojson", quiet = TRUE)
+# Read in shape files
+shape_nyc_boro <- st_read("Borough Boundaries.geojson", quiet = TRUE)
+shape_nyc_zip <- st_read("NYC ZIP Code Boundaries.geojson", quiet = TRUE)
 
-# Begin creation of map
-ggplot() +
-  geom_sf(data = shape_nyc, aes(fill = boro_name), show.legend = FALSE) +
-  theme_void()
+# Merge spatial data and count data
+dog_zip_counts <- dog_bites_full |> count(zipcode)
+
+shape_nyc_zip <- 
+  shape_nyc_zip |> 
+  left_join(dog_zip_counts, by = join_by(modzcta == zipcode))
+
+# Create Map
+(p <- 
+  ggplot() +
+  geom_sf(data = shape_nyc_zip, 
+          aes(fill = n)) +  
+  geom_sf(data = shape_nyc_boro, 
+          aes(color = boro_name), 
+          show.legend = FALSE,
+          linewidth = 0.9,
+          fill = NA) +
+   scale_fill_viridis_c(
+    breaks = c(50, 100, 150, 200, 250, 300, 350, 400),
+    name = "Dog Bites",
+    guide = guide_legend(
+      keyheight = unit(2, units = "mm"),
+      keywidth = unit(8, units = "mm"),
+      label.position = "bottom",
+      title.position = "top",
+      nrow = 4
+    )
+  ) + 
+  labs(title = "NYC Dog Bites (2015-2022)",
+       caption = "Source: NYCOpenData | Author: Ian Young") +
+  theme_void() +
+  theme(
+    plot.title = element_text(hjust = 0.5),  
+    plot.caption = element_text(hjust = 0.5),
+    legend.position = c(0.15, 0.90),
+    legend.justification = c(0, 1),
+    legend.key = element_rect(fill = "transparent", color = NA),
+    legend.background = element_rect(fill = "transparent", color = NA, size = 0),
+  )
+)
 ```
+
 
 ## Forecasting Dog Bites In NYC
 ```{r}
