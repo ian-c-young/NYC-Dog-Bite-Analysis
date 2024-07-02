@@ -6,4 +6,5 @@ This project connects to an API to pull data on dog bites in NYC into R. The goa
 
 The project was compiled with R Markdown in PDF format with code intentionally displayed as a sample of my skillset.
 
-![plot2](https://github.com/ian-c-young/NYC-Dog-Bite-Analysis/assets/130807752/08688bf7-3cab-4dff-b6dc-27a5854693c1)
+![NYC Dog Bite Map](https://github.com/ian-c-young/NYC-Dog-Bite-Analysis/assets/130807752/48ba71e4-a1c9-40d3-b3eb-9c4a2d5831bd)
+
