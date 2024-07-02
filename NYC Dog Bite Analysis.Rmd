@@ -36,10 +36,11 @@ dog_bites <-
 
 An initial organizing and cleaning of the data takes place. This involves converting 
 the date column that is stored as character data type to a date type, and adding a 
-individual column for year, month, and day. This is done using the lubridate package. 
-The uniqueid column was not recorded properly in the initial data set, and a more helpful 
-uniqueid column is created. Lastly, the species column is dropped as it provides no 
-information (all values in it are "DOG") and the columns are rearranged.
+individual column for year, month, day, and day of the week. This is done using the 
+lubridate package. The uniqueid column was not recorded properly in the initial data 
+set, and a more helpful uniqueid column is created. Lastly, the species column is 
+dropped as it provides no information (all values in it are "DOG") and the columns 
+are rearranged.
 ```{r}
 # Correct unique ID, adjust/create date columns, select relevant variables
 dog_bites_clean <- 
@@ -49,18 +50,19 @@ dog_bites_clean <-
          dateofbite = as_date(dateofbite),
          biteyear = year(dateofbite),
          bitemonth = month(dateofbite),
-         biteday = day(dateofbite)) |> 
+         biteday = day(dateofbite),
+         dayofweek = wday(dateofbite, label = TRUE)) |> 
   select(uniqueid, dateofbite, biteyear, 
-         bitemonth, biteday, zipcode, 
-         borough, breed, gender,
-         age, spayneuter)
+         bitemonth, biteday, dayofweek, 
+         zipcode, borough, breed, 
+         gender, age, spayneuter)
 ```
 
 \newpage
 
 # Background & Initial Exploration
 Below is a sample of 10 observations from the initial cleaned dog bite data. 
-There are a total of 26,127 observations and 11 variables (3 data columns not displayed 
+There are a total of 26,127 observations and 12 variables (4 data columns not displayed 
 in the table below). Each observation represents a single unique dog bite incident 
 collected by NYC between the start of 2015 and the end of 2022. The data was collected 
 online, by mail/fax, and by phone by the health departments animal bite unit. As 
@@ -74,7 +76,7 @@ understanding of the data.
 # Sample of 10 observations
 set.seed(30)
 dog_bites_clean |> 
-  select(-biteyear, -bitemonth, -biteday) |> 
+  select(-biteyear, -bitemonth, -biteday, -dayofweek) |> 
   mutate(dateofbite = format(dateofbite, "%Y-%m-%d")) |> 
   sample_n(10) |> 
   gt() |> 
@@ -178,7 +180,23 @@ dog_bites_full <-
 
 ## Exploratory Data Analysis
 ```{r}
-# Descriptive Statistics/Plots
+# Distribution of Count of Dog Bites in Each Zip Code
+dog_bites_full |> 
+  group_by(zipcode) |> 
+  summarise(n = n()) |> 
+  ggplot(aes(n)) +
+  geom_density() +
+  labs(title = "Dog Bite in NYC Zip Codes Distribution",
+       caption = "Source: NYCOpenData | Design: Ian Young") +
+  theme_bw() +
+  theme(text = element_text(family = "Century Gothic"),
+        plot.title = element_text(face = "bold"),
+        axis.text.x = element_text(color = "black"),
+        axis.text.y = element_text(color = "black"))
+
+# month, day of week, gender, age, spay nueter, borough, 
+# land area, water area, populaton, population density
+# housing units, occupied housing units, home value, household income
 ```
 
 ## Mapping Dog Bites In NYC
@@ -220,18 +238,21 @@ shape_nyc_zip <-
     )
   ) + 
   labs(title = "NYC Dog Bites (2015-2022)",
-       caption = "Source: NYCOpenData | Author: Ian Young") +
+       caption = "Source: NYCOpenData | Design: Ian Young") +
   theme_void() +
   theme(
     text = element_text(family = "Century Gothic"),
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background = element_rect(fill = "white", color = NA),
     plot.title = element_text(hjust = 0.5),  
     plot.caption = element_text(hjust = 0.5),
-    legend.position = c(0.15, 0.90),
+    legend.position = c(0.15, 0.85),
     legend.justification = c(0, 1),
     legend.key = element_rect(fill = "transparent", color = NA),
-    legend.background = element_rect(fill = "transparent", color = NA, size = 0),
+    legend.background = element_rect(fill = "transparent", color = NA, size = 0)
   )
 )
+
 ```
 
 
@@ -265,7 +286,7 @@ ggplot(aes(x = date, y = n)) +
        y = "Dog Bites", 
        title = "NYC Dog Bites 2015-2022",
        subtitle = "Dog bites regularly spike in the summer months.",
-       caption = "Source: NYCOpenData") +
+       caption = "Source: NYCOpenData | Design: Ian Young") +
   scale_color_manual(values = c("spring" = "darkgreen", 
                                 "summer" = "firebrick1", 
                                 "fall" = "goldenrod4", 
@@ -275,9 +296,9 @@ ggplot(aes(x = date, y = n)) +
     text = element_text(family = "Century Gothic"),
     axis.text = element_text(size = 10),
     axis.title = element_text(size = 10),
-    plot.title = element_text(size = 14),
+    plot.title = element_text(size = 14, face = "bold"),
     plot.subtitle = element_text(size = 10),
-    plot.caption = element_text(size = 8),
+    plot.caption = element_text(size = 8, face = "bold"),
     legend.position = "bottom",
     legend.direction = "horizontal",
     legend.title = element_blank(),
